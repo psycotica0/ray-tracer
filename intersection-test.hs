@@ -21,19 +21,25 @@ build_triangle (a1, b1, c1) (a2, b2, c2) (a3, b3, c3) = Triangle (3 V.|> [a1, b1
 
 triangle_to_plane (Triangle p1 p2 p3) = Plane (p2 - p1) (p3 - p1) p1
 
-ray_plane_intersection ray@(Ray r1 r2) plane@(Plane p1 p2 p3) = calc_ray ray n
+ray_plane_intersection ray@(Ray r1 r2) plane@(Plane p1 p2 p3) = result undefined
 	where
 	mat = M.fromColumns [p1, p2, (scalar (-1)) * r1]
-	solns =  A.linearSolve mat (M.asColumn (r2 - p3))
+	solns = A.linearSolve mat (M.asColumn (r2 - p3))
 	n = solns M.@@> (2,0)
+	-- The parameter here is a hack to get around the fact that it doesn't pattern match if there are no parameters
+	result fake | approxZero $ A.det mat = Nothing
+	result fake = Just $ calc_ray ray n
 
-ray_triangle_intersect ray triangle@(Triangle p1 p2 p3) = 1 > (V.foldVector (+) 0 $ transform point)
+ray_triangle_intersect ray triangle@(Triangle p1 p2 p3) = result undefined
 	where
-	point = ray_plane_intersection ray plane
+	intersect = ray_plane_intersection ray plane
 	plane@(Plane v1 v2 v3) = triangle_to_plane triangle
 	invmat = A.pinv $ M.fromColumns [v1, v2]
 	offset = invmat A.<> p1
 	transform vec = (invmat A.<> vec) - offset
+	result fake | intersect == Nothing = False
+	result fake = 1 > (V.foldVector (+) 0 $ transform point)
+		where Just point = intersect
 
 ray_intersect_mesh ray mesh = any (ray_triangle_intersect ray) mesh
 
@@ -46,11 +52,11 @@ cube v1 v2 v3 p1 = concatMap (uncurry3 square) [(v1, v2, p1), (v2, v3, p1), (v3,
 	p2 = p1 + v1 + v2 + v3
 	neg = (*) $ scalar (-1)
 
-main = print $ ray_intersect_mesh test_ray test_cube
+main = print $ map (\x -> ray_intersect_mesh x test_cube) test_rays
 	where
-	test_ray :: Ray Double
-	--test_ray = Ray (V.fromList [1, 1, 0]) (V.fromList [-0.5, -0.5, -1])
-	test_ray = Ray (V.fromList [4/3, 1, 2/3]) (V.fromList [0, 0, 0])
-	--test_ray = Ray (V.fromList [4/3, 1, 2/3]) (V.fromList [4, 2, 4])
-	--test_triangle = build_triangle (3,3,3) (1,1,1) (4,2,0)
+	test_rays :: [Ray Double]
+	test_rays = [Ray (V.fromList [1, 1, 0]) (V.fromList [-0.5, -0.5, -1]),
+		Ray (V.fromList [4/3, 1, 2/3]) (V.fromList [0, 0, 0]),
+		Ray (V.fromList [4/3, 1, 2/3]) (V.fromList [4, 2, 4])]
+	test_cube :: [Triangle Double]
 	test_cube = cube (3 V.|> [1, 0, 0]) (3 V.|> [0, 1, 0]) (3 V.|> [0, 0, 1]) (3 V.|> [0, 0, 0])
