@@ -3,7 +3,7 @@ import qualified Data.Packed.Vector as V
 import qualified Numeric.LinearAlgebra as A
 import Debug.Trace
 
-approxZero i = i < 1e-6
+approxZero i = i < 1e-6 && i > -1e-6
 
 scalar a = V.buildVector 3 $ const a
 
