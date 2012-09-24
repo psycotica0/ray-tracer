@@ -41,8 +41,10 @@ ray_triangle_intersect ray triangle@(Triangle p1 p2 p3) = result undefined
 	offset = invmat A.<> p1
 	transform vec = (invmat A.<> vec) - offset
 	result fake | intersect == Nothing = False
-	result fake = 1 > (V.foldVector (+) 0 $ transform point)
-		where Just point = intersect
+	result fake = (V.foldVector (\x acc -> acc && (x > 0)) True transformedPosition) && (1 > (V.foldVector (+) 0 transformedPosition))
+		where
+		Just point = intersect
+		transformedPosition = transform point
 
 ray_intersect_mesh ray mesh = any (ray_triangle_intersect ray) mesh
 
