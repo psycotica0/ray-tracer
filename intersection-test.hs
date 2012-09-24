@@ -7,15 +7,18 @@ approxZero i = i < 1e-6 && i > -1e-6
 
 scalar a = V.buildVector 3 $ const a
 
-data Plane a = Plane (V.Vector a) (V.Vector a) (V.Vector a)
+-- This represents a plane of the form p = ax + by + c
+data Plane a = Plane (V.Vector a) (V.Vector a) (V.Vector a) deriving (Show)
 
 calc_plane (Plane a b c) n1 n2 = (a * (scalar n1)) + (b * (scalar n2)) + c
 
-data Ray a = Ray (V.Vector a) (V.Vector a)
+-- This represents a ray of the form r = ax + b
+data Ray a = Ray (V.Vector a) (V.Vector a) deriving (Show)
 
 calc_ray (Ray a b) n1 = (a * (scalar n1)) + b
 
-data Triangle a = Triangle (V.Vector a) (V.Vector a) (V.Vector a)
+-- Each of these Vectors represent a point in 3-space
+data Triangle a = Triangle (V.Vector a) (V.Vector a) (V.Vector a) deriving (Show)
 
 build_triangle (a1, b1, c1) (a2, b2, c2) (a3, b3, c3) = Triangle (3 V.|> [a1, b1, c1]) (3 V.|> [a2,b2,c2]) (3 V.|> [a3,b3,c3])
 
