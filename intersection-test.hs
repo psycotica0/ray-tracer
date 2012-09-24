@@ -3,6 +3,8 @@ import qualified Data.Packed.Vector as V
 import qualified Numeric.LinearAlgebra as A
 import Debug.Trace
 
+valueTrace a = traceShow a a
+
 approxZero i = i < 1e-6 && i > -1e-6
 
 scalar a = V.buildVector 3 $ const a
@@ -62,6 +64,8 @@ main = print $ map (\x -> ray_intersect_mesh x test_cube) test_rays
 	test_rays :: [Ray Double]
 	test_rays = [Ray (V.fromList [1, 1, 0]) (V.fromList [-0.5, -0.5, -1]),
 		Ray (V.fromList [4/3, 1, 2/3]) (V.fromList [0, 0, 0]),
-		Ray (V.fromList [4/3, 1, 2/3]) (V.fromList [4, 2, 4])]
+		Ray (V.fromList [4/3, 1, 2/3]) (V.fromList [4, 2, 4]),
+		Ray (V.fromList [0, 0, 1]) (V.fromList [0.5, 0.3, -1]),
+		Ray (V.fromList [0, 0, 1]) (V.fromList [3, 3, -1])]
 	test_cube :: [Triangle Double]
 	test_cube = cube (3 V.|> [1, 0, 0]) (3 V.|> [0, 1, 0]) (3 V.|> [0, 0, 1]) (3 V.|> [0, 0, 0])
