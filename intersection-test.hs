@@ -1,6 +1,8 @@
 import qualified Data.Packed.Matrix as M
 import qualified Data.Packed.Vector as V
 import qualified Numeric.LinearAlgebra as A
+import qualified Numeric.LinearAlgebra.Util as U
+import qualified Data.Ix as I
 import Debug.Trace
 
 valueTrace a = traceShow a a
@@ -8,6 +10,7 @@ valueTrace a = traceShow a a
 approxZero i = i < 1e-6 && i > -1e-6
 
 scalar a = V.buildVector 3 $ const a
+(|*) a b = (scalar a) * b
 
 -- This represents a plane of the form p = ax + by + c
 data Plane a = Plane (V.Vector a) (V.Vector a) (V.Vector a) deriving (Show)
@@ -59,13 +62,28 @@ cube v1 v2 v3 p1 = concatMap (uncurry3 square) [(v1, v2, p1), (v2, v3, p1), (v3,
 	p2 = p1 + v1 + v2 + v3
 	neg = (*) $ scalar (-1)
 
+-- This is a camera. It's got a bunch of crap
+-- So, first are settings. They're size of the surface in our units (w h) then resolution of the surface (w h).
+-- Then the next two are the position of the camera, and the vector it's pointing in
+-- We assume for now that the camera is always level relative to (1, 0, 1) (No roll)
+data Camera a = Camera a a Int Int (V.Vector a) (V.Vector a)
+
+-- This camera is currently orthographic, rather than perspective
+calc_ray_set camera@(Camera width height wres hres pos direction) = rays
+	where
+	-- This gives me the width axis of my image
+	-- It is acheived by a cross product of my looking direction and a vertical axis
+	width_axis =  U.cross direction (V.fromList [0, 1, 0])
+	-- This gives me the height axis of my image
+	height_axis = U.cross direction width_axis
+	-- This function computes the position of a ray given its place in the matrix
+	ray_pos x y = (((((fromIntegral x) * (width / (fromIntegral wres))) - (width / 2)) |* width_axis) + ((((fromIntegral y) * (height / (fromIntegral hres))) - (height / 2)) |* height_axis)) + pos
+	-- Now I compute the associative list of rays using buildMatrix
+	rays = map (Ray direction) $ map (uncurry ray_pos) $ I.range ((0,0), (wres, hres))
+
 main = print $ map (\x -> ray_intersect_mesh x test_cube) test_rays
 	where
 	test_rays :: [Ray Double]
-	test_rays = [Ray (V.fromList [1, 1, 0]) (V.fromList [-0.5, -0.5, -1]),
-		Ray (V.fromList [4/3, 1, 2/3]) (V.fromList [0, 0, 0]),
-		Ray (V.fromList [4/3, 1, 2/3]) (V.fromList [4, 2, 4]),
-		Ray (V.fromList [0, 0, 1]) (V.fromList [0.5, 0.3, -1]),
-		Ray (V.fromList [0, 0, 1]) (V.fromList [3, 3, -1])]
+	test_rays = calc_ray_set $ Camera 4 4 8 8 (3 V.|> [0,0, -3]) (3 V.|> [0,0,1])
 	test_cube :: [Triangle Double]
 	test_cube = cube (3 V.|> [1, 0, 0]) (3 V.|> [0, 1, 0]) (3 V.|> [0, 0, 1]) (3 V.|> [0, 0, 0])
