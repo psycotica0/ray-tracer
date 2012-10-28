@@ -3,7 +3,8 @@ import qualified Data.Packed.Vector as V
 import qualified Numeric.LinearAlgebra as A
 import qualified Numeric.LinearAlgebra.Util as U
 import qualified Data.List as L
-import qualified Data.Ix as I
+import Data.Ix (range)
+import Data.Tuple (swap)
 import Data.Function (on)
 import Debug.Trace
 
@@ -83,7 +84,7 @@ calc_ray_set camera@(Camera width height wres hres pos direction) = rays
 	-- This function computes the position of a ray given its place in the matrix
 	ray_pos x y = (partial_vector (width |* width_axis) wres x) + (partial_vector (height |* height_axis) hres y) + pos + (V.fromList [-width / 2, -height/2, 0])
 	-- Now I compute the associative list of rays using buildMatrix
-	rays = map (Ray direction) $ map (uncurry ray_pos) $ I.range ((0,0), (wres, hres))
+	rays = map (Ray direction) $ map (uncurry ray_pos) $ map swap $ range ((1, 1), (hres, wres))
 
 -- This makes a crude ASCII image
 -- I just assume that there are (x * y) items in bools
