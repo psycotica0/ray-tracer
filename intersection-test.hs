@@ -4,6 +4,7 @@ import qualified Numeric.LinearAlgebra as A
 import qualified Numeric.LinearAlgebra.Util as U
 import qualified Data.List as L
 import qualified Data.Ix as I
+import Data.Function (on)
 import Debug.Trace
 
 valueTrace a = traceShow a a
@@ -77,8 +78,10 @@ calc_ray_set camera@(Camera width height wres hres pos direction) = rays
 	width_axis = U.cross (V.fromList [0, 1, 0]) direction
 	-- This gives me the height axis of my image
 	height_axis = U.cross direction width_axis
+	-- This function computes a vector based on progress along a vector
+	partial_vector vec steps current_step = (on (/) fromIntegral current_step steps) |* vec
 	-- This function computes the position of a ray given its place in the matrix
-	ray_pos x y = (((((fromIntegral x) * (width / (fromIntegral wres))) - (width / 2)) |* width_axis) + ((((fromIntegral y) * (height / (fromIntegral hres))) - (height / 2)) |* height_axis)) + pos
+	ray_pos x y = (partial_vector (width |* width_axis) wres x) + (partial_vector (height |* height_axis) hres y) + pos + (V.fromList [-width / 2, -height/2, 0])
 	-- Now I compute the associative list of rays using buildMatrix
 	rays = map (Ray direction) $ map (uncurry ray_pos) $ I.range ((0,0), (wres, hres))
 
