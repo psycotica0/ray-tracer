@@ -1,5 +1,5 @@
 import Data.Packed.Matrix (fromColumns, asColumn, (@@>))
-import Data.Packed.Vector (Vector, buildVector, foldVector, (|>), fromList)
+import Data.Packed.Vector (Vector, buildVector, foldVector, (|>))
 import Numeric.LinearAlgebra (linearSolve, det, pinv, (<>))
 import Numeric.LinearAlgebra.Util (cross)
 import Data.List (intercalate)
@@ -76,13 +76,13 @@ calc_ray_set camera@(Camera width height wres hres pos direction) = rays
 	where
 	-- This gives me the width axis of my image
 	-- It is acheived by a cross product of my looking direction and a vertical axis
-	width_axis = cross (fromList [0, 1, 0]) direction
+	width_axis = cross (3 |>  [0, 1, 0]) direction
 	-- This gives me the height axis of my image
 	height_axis = cross direction width_axis
 	-- This function computes a vector based on progress along a vector
 	partial_vector vec steps current_step = (on (/) fromIntegral current_step steps) |* vec
 	-- This function computes the position of a ray given its place in the matrix
-	ray_pos x y = (partial_vector (width |* width_axis) wres x) + (partial_vector (height |* height_axis) hres y) + pos + (fromList [-width / 2, -height/2, 0])
+	ray_pos x y = (partial_vector (width |* width_axis) wres x) + (partial_vector (height |* height_axis) hres y) + pos + (3 |> [-width / 2, -height/2, 0])
 	-- Now I compute the associative list of rays using buildMatrix
 	rays = map (Ray direction) $ map (uncurry ray_pos) $ map swap $ range ((1, 1), (hres, wres))
 
