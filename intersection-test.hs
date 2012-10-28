@@ -1,19 +1,26 @@
 import Data.Packed.Matrix (fromColumns, asColumn, (@@>))
-import Data.Packed.Vector (Vector, buildVector, foldVector, (|>))
+import Data.Packed.Vector (Vector, (|>), toList)
 import Numeric.LinearAlgebra (linearSolve, det, pinv, (<>))
 import Numeric.LinearAlgebra.Util (cross)
 import Data.List (intercalate)
 import Data.Ix (range)
 import Data.Tuple (swap)
 import Data.Function (on)
+import Data.Bool.HT (if')
+import Data.Maybe.HT (toMaybe)
 import Debug.Trace
 
 valueTrace a = traceShow a a
 
-approxZero i = i < 1e-6 && i > -1e-6
+on2 :: (a -> b) -> (a -> b) -> (b -> b -> c) -> a -> c
+on2 f1 f2 f3 v = f3 (f1 v) (f2 v)
 
-scalar a = buildVector 3 $ const a
-(|*) a b = (scalar a) * b
+approxZero = on2 (< 1e-6) (> -1e-6) (&&)
+
+scalar = (3 |>).repeat
+(|*) a = (*) $ scalar a
+
+uncurry3 func (a, b, c) = func a b c
 
 -- This represents a plane of the form p = ax + by + c
 data Plane a = Plane (Vector a) (Vector a) (Vector a) deriving (Show)
@@ -28,35 +35,23 @@ calc_ray (Ray a b) n1 = (n1 |* a) + b
 -- Each of these Vectors represent a point in 3-space
 data Triangle a = Triangle (Vector a) (Vector a) (Vector a) deriving (Show)
 
-build_triangle (a1, b1, c1) (a2, b2, c2) (a3, b3, c3) = Triangle (3 |> [a1, b1, c1]) (3 |> [a2,b2,c2]) (3 |> [a3,b3,c3])
-
 triangle_to_plane (Triangle p1 p2 p3) = Plane (p2 - p1) (p3 - p1) p1
 
-ray_plane_intersection ray@(Ray r1 r2) plane@(Plane p1 p2 p3) = result undefined
+ray_plane_intersection ray@(Ray r1 r2) (Plane p1 p2 p3) = toMaybe (not $ approxZero $ det mat) $ calc_ray ray n
 	where
 	mat = fromColumns [p1, p2, -1 |* r1]
 	solns = linearSolve mat (asColumn (r2 - p3))
 	n = solns @@> (2,0)
-	-- The parameter here is a hack to get around the fact that it doesn't pattern match if there are no parameters
-	result fake | approxZero $ det mat = Nothing
-	result fake = Just $ calc_ray ray n
 
-ray_triangle_intersect ray triangle@(Triangle p1 p2 p3) = result undefined
+ray_triangle_intersect ray triangle = maybe False ((on2 (all (>0)) ((1>).sum) (&&)).toList.transform) intersect
 	where
+	plane@(Plane v1 v2 p) = triangle_to_plane triangle
 	intersect = ray_plane_intersection ray plane
-	plane@(Plane v1 v2 v3) = triangle_to_plane triangle
 	invmat = pinv $ fromColumns [v1, v2]
-	offset = invmat <> p1
+	offset = invmat <> p
 	transform vec = (invmat <> vec) - offset
-	result fake | intersect == Nothing = False
-	result fake = (foldVector (\x acc -> acc && (x > 0)) True transformedPosition) && (1 > (foldVector (+) 0 transformedPosition))
-		where
-		Just point = intersect
-		transformedPosition = transform point
 
-ray_intersect_mesh ray mesh = any (ray_triangle_intersect ray) mesh
-
-uncurry3 func (a, b, c) = func a b c
+ray_intersect_mesh mesh ray = any (ray_triangle_intersect ray) mesh
 
 square v1 v2 p1 = map (uncurry3 Triangle) [(p1, p1 + v1, p1 + v1 + v2), (p1 + v1 + v2, p1 + v2, p1)]
 
@@ -72,7 +67,7 @@ cube v1 v2 v3 p1 = concatMap (uncurry3 square) [(v1, v2, p1), (v2, v3, p1), (v3,
 data Camera a = Camera a a Int Int (Vector a) (Vector a)
 
 -- This camera is currently orthographic, rather than perspective
-calc_ray_set camera@(Camera width height wres hres pos direction) = rays
+calc_ray_set (Camera width height wres hres pos direction) = rays
 	where
 	-- This gives me the width axis of my image
 	-- It is acheived by a cross product of my looking direction and a vertical axis
@@ -84,7 +79,7 @@ calc_ray_set camera@(Camera width height wres hres pos direction) = rays
 	-- This function computes the position of a ray given its place in the matrix
 	ray_pos x y = (partial_vector (width |* width_axis) wres x) + (partial_vector (height |* height_axis) hres y) + pos + (3 |> [-width / 2, -height/2, 0])
 	-- Now I compute the associative list of rays using buildMatrix
-	rays = map (Ray direction) $ map (uncurry ray_pos) $ map swap $ range ((1, 1), (hres, wres))
+	rays = map ((Ray direction).(uncurry ray_pos).swap) $ range ((1, 1), (hres, wres))
 
 -- This makes a crude ASCII image
 -- I just assume that there are (x * y) items in bools
@@ -94,7 +89,7 @@ make_shitty_image x y bools = intercalate "\n" $ takes x $ map pixel bools
 	pixel False = ' '
 	takes n list = map fst $ scanl (\acc v -> splitAt v $ snd acc) (splitAt n list) $ replicate (y-1) n
 
-main = putStrLn $ make_shitty_image wres hres $  map (\x -> ray_intersect_mesh x test_cube) test_rays
+main = putStrLn $ make_shitty_image wres hres $  map (ray_intersect_mesh test_cube) test_rays
 	where
 	wres = 80
 	hres = 20
