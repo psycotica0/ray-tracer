@@ -74,7 +74,7 @@ calc_ray_set camera@(Camera width height wres hres pos direction) = rays
 	where
 	-- This gives me the width axis of my image
 	-- It is acheived by a cross product of my looking direction and a vertical axis
-	width_axis =  U.cross direction (V.fromList [0, 1, 0])
+	width_axis = U.cross (V.fromList [0, 1, 0]) direction
 	-- This gives me the height axis of my image
 	height_axis = U.cross direction width_axis
 	-- This function computes the position of a ray given its place in the matrix
