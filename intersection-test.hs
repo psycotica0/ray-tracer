@@ -2,6 +2,7 @@ import qualified Data.Packed.Matrix as M
 import qualified Data.Packed.Vector as V
 import qualified Numeric.LinearAlgebra as A
 import qualified Numeric.LinearAlgebra.Util as U
+import qualified Data.List as L
 import qualified Data.Ix as I
 import Debug.Trace
 
@@ -81,7 +82,15 @@ calc_ray_set camera@(Camera width height wres hres pos direction) = rays
 	-- Now I compute the associative list of rays using buildMatrix
 	rays = map (Ray direction) $ map (uncurry ray_pos) $ I.range ((0,0), (wres, hres))
 
-main = print $ map (\x -> ray_intersect_mesh x test_cube) test_rays
+-- This makes a crude ASCII image
+-- I just assume that there are (x * y) items in bools
+make_shitty_image x y bools = L.intercalate "\n" $ takes x $ map pixel bools
+	where
+	pixel True = '#'
+	pixel False = ' '
+	takes n list = map fst $ scanl (\acc v -> splitAt v $ snd acc) (splitAt n list) $ replicate (y-1) n
+
+main = putStrLn $ make_shitty_image 8 8  $ map (\x -> ray_intersect_mesh x test_cube) test_rays
 	where
 	test_rays :: [Ray Double]
 	test_rays = calc_ray_set $ Camera 4 4 8 8 (3 V.|> [0,0, -3]) (3 V.|> [0,0,1])
