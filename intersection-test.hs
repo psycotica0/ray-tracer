@@ -94,9 +94,11 @@ make_shitty_image x y bools = L.intercalate "\n" $ takes x $ map pixel bools
 	pixel False = ' '
 	takes n list = map fst $ scanl (\acc v -> splitAt v $ snd acc) (splitAt n list) $ replicate (y-1) n
 
-main = putStrLn $ make_shitty_image 8 8  $ map (\x -> ray_intersect_mesh x test_cube) test_rays
+main = putStrLn $ make_shitty_image wres hres $  map (\x -> ray_intersect_mesh x test_cube) test_rays
 	where
+	wres = 80
+	hres = 20
 	test_rays :: [Ray Double]
-	test_rays = calc_ray_set $ Camera 4 4 8 8 (3 V.|> [0,0, -3]) (3 V.|> [0,0,1])
+	test_rays = calc_ray_set $ Camera 4 4 wres hres (3 V.|> [0,0, -3]) (3 V.|> [0,0,1])
 	test_cube :: [Triangle Double]
 	test_cube = cube (3 V.|> [1, 0, 0]) (3 V.|> [0, 1, 0]) (3 V.|> [0, 0, 1]) (3 V.|> [0, 0, 0])
