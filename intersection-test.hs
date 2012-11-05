@@ -1,21 +1,16 @@
 import Data.Packed.Matrix (fromColumns, asColumn, (@@>))
 import Data.Packed.Vector (Vector, (|>), toList)
-import Numeric.LinearAlgebra (linearSolve, det, pinv, (<>))
+import Numeric.LinearAlgebra (luSolve, luPacked, pinv, (<>))
 import Numeric.LinearAlgebra.Util (cross)
 import Data.List (intercalate)
 import Data.Ix (range)
 import Data.Tuple (swap)
 import Data.Function (on)
-import Data.Bool.HT (if')
 import Data.Maybe.HT (toMaybe)
+import Control.Applicative ((<*>), pure)
 import Debug.Trace
 
 valueTrace a = traceShow a a
-
-on2 :: (a -> b) -> (a -> b) -> (b -> b -> c) -> a -> c
-on2 f1 f2 f3 v = f3 (f1 v) (f2 v)
-
-approxZero = on2 (< 1e-6) (> -1e-6) (&&)
 
 scalar = (3 |>).repeat
 (|*) a = (*) $ scalar a
@@ -37,13 +32,13 @@ data Triangle a = Triangle (Vector a) (Vector a) (Vector a) deriving (Show)
 
 triangle_to_plane (Triangle p1 p2 p3) = Plane (p2 - p1) (p3 - p1) p1
 
-ray_plane_intersection ray@(Ray r1 r2) (Plane p1 p2 p3) = toMaybe (not $ approxZero $ det mat) $ calc_ray ray n
+ray_plane_intersection ray@(Ray r1 r2) (Plane p1 p2 p3) = toMaybe (not $ isInfinite n) $ calc_ray ray n
 	where
 	mat = fromColumns [p1, p2, -1 |* r1]
-	solns = linearSolve mat (asColumn (r2 - p3))
+	solns = (luSolve.luPacked) mat (asColumn (r2 - p3))
 	n = solns @@> (2,0)
 
-ray_triangle_intersect ray triangle = maybe False ((on2 (all (>0)) ((1>).sum) (&&)).toList.transform) intersect
+ray_triangle_intersect ray triangle = maybe False ((and.([all (>0), (1>).sum]<*>)).pure.toList.transform) intersect
 	where
 	plane@(Plane v1 v2 p) = triangle_to_plane triangle
 	intersect = ray_plane_intersection ray plane
