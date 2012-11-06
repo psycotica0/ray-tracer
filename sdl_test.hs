@@ -2,6 +2,7 @@ import Graphics.UI.SDL.General (withInit, InitFlag(InitEverything))
 import Graphics.UI.SDL.Types (Surface, surfaceGetPixels, surfaceGetPixelFormat, SurfaceFlag(SWSurface))
 import Graphics.UI.SDL.Video (setVideoMode, mapRGB)
 import qualified Graphics.UI.SDL.Video as V (flip)
+import Graphics.UI.SDL.WindowManagement (setCaption)
 import Graphics.UI.SDL.Events (Event(Quit), waitEvent)
 import Foreign.Ptr (castPtr)
 import Data.Array (elems)
@@ -36,12 +37,12 @@ wait_to_quit _ = waitEvent >>= handle
 	handle Quit = return ()
 	handle _ = wait_to_quit ()
 
-render = do
+render _ = do
 	screen <- setVideoMode wres hres color_depth [SWSurface]
 	pixels <- compute_pixels screen $ fire_rays (calculate_rays test_camera) test_cube
 	array_to_surface screen pixels
 	V.flip screen
 
 
-main = withInit [InitEverything] $ render >>= wait_to_quit
+main = withInit [InitEverything] $ setCaption "SDL Test" "" >>= render >>= wait_to_quit
 
