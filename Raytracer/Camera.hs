@@ -9,12 +9,6 @@ import Data.Tuple (swap)
 import Data.Ix (range, Ix, index, inRange)
 import Data.Function (on)
 
-import Debug.Trace
-import Data.Array (elems, array)
-import Data.List (nub)
-
-lTrace f a = traceShow (f a) a
-
 -- This is a camera. It's got a bunch of crap
 -- So, first are settings. They're size of the surface in our units (w h) then resolution of the surface (w h).
 -- Then the next two are the position of the camera, and the vector it's pointing in
@@ -44,8 +38,7 @@ calculate_rays (Camera width height wres hres pos direction) = rays
 	-- This function computes the position of a ray given its place in the matrix
 	ray_pos (Point x y) = (partial_vector (width |* width_axis) wres x) + (partial_vector (height |* height_axis) hres y) + pos + (3 |> [-width / 2, -height/2, 0])
 	-- This function takes a function expecting (x,y) and bounds and builds an array by calling the function at each point
-	--build_array func bounds = lTrace (length.elems) $ listArray (lTrace (length.range) bounds) $ lTrace length $ map func $ lTrace (length.nub) $ range bounds
-	build_array func bounds = array bounds $ lTrace id $ fmap (\i -> (i, func i)) $ range bounds
+	build_array func bounds = listArray bounds $ map func $ range bounds
 	-- This function, finally, generates an array of wres and hres full of the proper ray at each point
 	rays = build_array ((Ray direction).ray_pos) (Point 1 1, Point wres hres)
 

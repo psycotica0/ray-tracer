@@ -4,8 +4,6 @@ import Data.Array (elems, bounds)
 import Raytracer.Geometry (cube)
 import Raytracer.Camera (Camera(Camera), Point(Point), calculate_rays, fire_rays)
 
-import Data.Ix (range)
-
 -- This makes a crude ASCII image
 make_shitty_image array = intercalate "\n" $ fmap (\list -> "." ++ list ++ ".") $ takes (x+1) $ fmap pixel $ elems array
 	where
@@ -14,8 +12,7 @@ make_shitty_image array = intercalate "\n" $ fmap (\list -> "." ++ list ++ ".") 
 	pixel Nothing = ' '
 	takes n list = map fst $ scanl (\acc v -> splitAt v $ snd acc) (splitAt n list) $ replicate y n
 
---main = putStrLn $ make_shitty_image $ fire_rays test_rays test_cube
-main = print $ length $ elems $ test_rays
+main = putStrLn $ make_shitty_image $ fire_rays test_rays test_cube
 	where
 	wres = 160
 	hres = 30
