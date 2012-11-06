@@ -28,7 +28,7 @@ instance Ord Point where
 
 instance Ix Point where
 	range ((Point a b), (Point c d)) = (range (b, d)) >>= (\y -> (range (a, c)) >>= (\x -> return $ Point x y))
-	index ((Point a b), (Point c d)) (Point e f) = ((d - b) * (f - b)) + (e - a)
+	index ((Point a b), (Point c d)) (Point e f) = (((c - a) + 1) * (f - b)) + (e - a)
 	inRange ((Point a b), (Point c d)) (Point e f) = (inRange (a, c) e) && (inRange (b, d) f)
 
 -- This camera is currently orthographic, rather than perspective
