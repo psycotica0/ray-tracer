@@ -1,4 +1,4 @@
-import Graphics.UI.SDL.General (withInit, InitFlag(InitEverything))
+import Graphics.UI.SDL.General (withInit, InitFlag(InitVideo, InitEventthread))
 import Graphics.UI.SDL.Types (Surface, surfaceGetPixels, surfaceGetPixelFormat, SurfaceFlag(SWSurface))
 import Graphics.UI.SDL.Video (setVideoMode, mapRGB)
 import qualified Graphics.UI.SDL.Video as V (flip)
@@ -44,5 +44,5 @@ render _ = do
 	V.flip screen
 
 
-main = withInit [InitEverything] $ setCaption "SDL Test" "" >>= render >>= wait_to_quit
+main = withInit [InitVideo, InitEventthread] $ setCaption "SDL Test" "" >>= render >>= wait_to_quit
 
