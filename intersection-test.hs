@@ -5,7 +5,7 @@ import Raytracer.Geometry (cube)
 import Raytracer.Camera (Camera(Camera), Point(Point), calculate_rays, fire_rays)
 
 -- This makes a crude ASCII image
-make_shitty_image array = intercalate "\n" $ takes (x+1) $ fmap pixel $ elems array
+make_shitty_image array = intercalate "\n" $ fmap (\list -> "." ++ list ++ ".") $ takes (x+1) $ fmap pixel $ elems array
 	where
 	(x, y) = let ((Point x0 y0), (Point x1 y1)) = bounds array; in (x1 - x0, y1 - y0)
 	pixel (Just _) = '#'
