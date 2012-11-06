@@ -1,4 +1,6 @@
-.PHONY: clean
+.PHONY: clean all
+
+all: sdl_test intersection-test
 
 sdl_test: sdl_test.hs Raytracer/Camera.hs Raytracer/Geometry.hs
 	ghc sdl_test
