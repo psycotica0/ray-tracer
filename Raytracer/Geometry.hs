@@ -6,7 +6,10 @@ import Data.Maybe.HT (toMaybe)
 import Data.Monoid (First(First), Monoid, getFirst, mempty, mappend, mconcat)
 import Numeric.LinearAlgebra (luSolve, luPacked, pinv, (<>))
 import Control.Applicative ((<*>), pure)
+import Control.Monad (join)
 import Data.Foldable (find)
+import Data.List (sort)
+import Data.Maybe (isJust)
 
 (|*) = (*).(3|>).repeat
 
@@ -53,8 +56,7 @@ instance Monoid Mesh where
 
 instance Intersectable Mesh where
 	-- We'll return, for the mesh, the first one we hit
-	-- More correctly, we should actually return the one nearest to the ray's origin (The one the ray would hit first)
-	intersection ray (Mesh triangles) = getFirst $ mconcat $ fmap ((First).(intersection ray)) triangles
+	intersection ray (Mesh triangles) = join $ find isJust $ sort $ fmap (intersection ray) triangles
 
 -- This function takes a point and two vectors and generates a mesh representing that square
 square v1 v2 p1 = Mesh [Triangle p1 (p1 + v1) (p1 + v1 + v2), Triangle (p1 + v1 + v2) (p1 + v2) p1]
