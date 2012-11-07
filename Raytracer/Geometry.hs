@@ -6,22 +6,26 @@ import Data.Maybe.HT (toMaybe)
 import Data.Monoid (First(First), Monoid, getFirst, mempty, mappend, mconcat)
 import Numeric.LinearAlgebra (luSolve, luPacked, pinv, (<>))
 import Control.Applicative ((<*>), pure)
+import Data.Foldable (find)
 
 (|*) = (*).(3|>).repeat
+
+all_of :: [(a -> Bool)] -> a -> Bool
+all_of conditions value = and $ conditions <*> (pure value)
 
 -- This represents a ray of the form r = ax + b
 data Ray = Ray (Vector Double) (Vector Double) deriving (Show)
 calc_ray (Ray a b) n1 = (n1 |* a) + b
 
 class Intersectable a where
-	intersection :: Ray -> a -> Maybe (Vector Double)
+	intersection :: Ray -> a -> Maybe Double
 
 -- This represents a plane of the form p = ax + by + c
 data Plane = Plane (Vector Double) (Vector Double) (Vector Double) deriving (Show)
 calc_plane (Plane a b c) n1 n2 = (n1 |* a) + (n2 |* b) + c
 
 instance Intersectable Plane where
-	intersection ray@(Ray r1 r2) (Plane p1 p2 p3) = toMaybe (not $ isInfinite n) $ calc_ray ray n
+	intersection ray@(Ray r1 r2) (Plane p1 p2 p3) = find (all_of [not.isInfinite, (>0)]) (Just n)
 		where
 		mat = fromColumns [p1, p2, -1 |* r1]
 		solns = (luSolve.luPacked) mat (asColumn (r2 - p3))
@@ -31,11 +35,10 @@ instance Intersectable Plane where
 data Triangle = Triangle (Vector Double) (Vector Double) (Vector Double) deriving (Show)
 
 instance Intersectable Triangle where
-	intersection ray (Triangle p1 p2 p3) = (intersection ray plane) >>= (\point -> toMaybe (within_triangle point) point)
+	intersection ray (Triangle p1 p2 p3) = find (within_triangle.(calc_ray ray)) $ intersection ray plane
 		where
 		plane@(Plane v1 v2 p) = Plane (p2 - p1) (p3 - p1) p1
-		intersect = intersection ray plane
-		within_triangle = (and.([all (>0), (1>).sum]<*>)).pure.toList.transform
+		within_triangle = (all_of [all (>0), (1>).sum]).toList.transform
 		invmat = pinv $ fromColumns [v1, v2]
 		offset = invmat <> p
 		transform vec = (invmat <> vec) - offset
