@@ -22,11 +22,14 @@ test_camera = Camera 4 3 wres hres (3 |> [-3, -6, -3]) (3 |> [1,1,1])
 test_rays = calculate_rays test_camera
 test_cube = cube (3 |> [2, 0, 0]) (3 |> [0, 2, 0]) (3 |> [0, 0, 2]) (3 |> [0, 0, 0])
 
+transpose (a, b) (c, d) v = (((v-c) * (b-a)) / (d-c)) + a
+
 compute_pixels surface = (mapM pixel).elems
 	where
 	pixel_format = surfaceGetPixelFormat surface
-	pixel (Just _) = mapRGB pixel_format 127 127 127
-	pixel Nothing = mapRGB pixel_format 0 0 0
+	pixel (Just n) = greyscale $ round $ transpose (256, 0) (4, 8) n
+	pixel Nothing = greyscale 0
+	greyscale a = mapRGB pixel_format a a a
 
 array_to_surface surface array = array_ptr >>= ((flip pokeArray) array)
 	where
@@ -42,7 +45,6 @@ render _ = do
 	pixels <- compute_pixels screen $ fire_rays (calculate_rays test_camera) test_cube
 	array_to_surface screen pixels
 	V.flip screen
-
 
 main = withInit [InitVideo, InitEventthread] $ setCaption "SDL Test" "" >>= render >>= wait_to_quit
 
