@@ -9,6 +9,8 @@ import Data.Array (elems)
 import Foreign.Marshal.Array (pokeArray)
 import Control.Monad (liftM)
 
+import Data.Maybe (fromJust, isJust)
+
 import Data.Packed.Vector ((|>))
 
 import Raytracer.Geometry (cube)
@@ -24,11 +26,13 @@ test_cube = cube (3 |> [2, 0, 0]) (3 |> [0, 2, 0]) (3 |> [0, 0, 2]) (3 |> [0, 0,
 
 transpose (a, b) (c, d) v = (((v-c) * (b-a)) / (d-c)) + a
 
-compute_pixels surface = (mapM pixel).elems
+compute_pixels surface array = mapM (pixel (minimum just_list, maximum just_list)) list
 	where
+	list = elems array
+	just_list = map fromJust $ filter isJust list
 	pixel_format = surfaceGetPixelFormat surface
-	pixel (Just n) = greyscale $ round $ transpose (256, 0) (4, 8) n
-	pixel Nothing = greyscale 0
+	pixel range (Just n) = greyscale $ round $ transpose (256, 0) range n
+	pixel _ Nothing = greyscale 0
 	greyscale a = mapRGB pixel_format a a a
 
 array_to_surface surface array = array_ptr >>= ((flip pokeArray) array)
