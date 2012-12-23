@@ -1,6 +1,6 @@
 module Raytracer.Camera where
 
-import Data.Packed.Vector (Vector, (|>))
+import Data.Packed.Vector (Vector, (|>), toList)
 import Raytracer.Geometry (Ray(Ray), (|*), intersection)
 import Numeric.LinearAlgebra.Util (cross)
 import Data.Array (listArray)
@@ -25,14 +25,20 @@ instance Ix Point where
 	index ((Point a b), (Point c d)) (Point e f) = (((c - a) + 1) * (f - b)) + (e - a)
 	inRange ((Point a b), (Point c d)) (Point e f) = (inRange (a, c) e) && (inRange (b, d) f)
 
+norm :: Vector Double -> Double
+norm = sqrt.sum.(map (^2)).toList
+
+unitize :: Vector Double -> Vector Double
+unitize v = (1/(norm v)) |* v
+
 -- This camera is currently orthographic, rather than perspective
 calculate_rays (Camera width height wres hres pos direction) = rays
 	where
 	-- This gives me the width axis of my image
 	-- It is acheived by a cross product of my looking direction and a vertical axis
-	width_axis = cross (3 |>  [0, 1, 0]) direction
+	width_axis = unitize $ cross (3 |>  [0, 1, 0]) direction
 	-- This gives me the height axis of my image
-	height_axis = cross direction width_axis
+	height_axis = unitize $ cross direction width_axis
 	-- This function computes a vector based on progress along a vector
 	partial_vector vec steps current_step = (on (/) fromIntegral current_step steps) |* vec
 	-- This function computes the position of a ray given its place in the matrix
