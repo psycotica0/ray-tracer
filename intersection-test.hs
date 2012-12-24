@@ -16,6 +16,6 @@ main = putStrLn $ make_shitty_image $ fire_rays test_rays test_cube
 	where
 	wres = 160
 	hres = 30
-	test_camera = Camera 4 4 wres hres (3 |> [-3, -6, -3]) (3 |> [1,1,1])
+	test_camera = Camera 4 4 wres hres Nothing (3 |> [-3, -6, -3]) (3 |> [1,1,1])
 	test_rays = calculate_rays test_camera
 	test_cube = cube (3 |> [2, 0, 0]) (3 |> [0, 2, 0]) (3 |> [0, 0, 2]) (3 |> [0, 0, 0])
