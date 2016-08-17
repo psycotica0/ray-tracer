@@ -34,7 +34,7 @@ unitize :: Vector Double -> Vector Double
 unitize v = (1/(norm v)) |* v
 
 -- This camera is currently orthographic, rather than perspective
-calculate_rays (Camera width height wres hres focus pos direction) = rays
+calculate_ray (Camera width height wres hres focus pos direction) = (\pos -> Ray (ray_direction pos) pos) . ray_pos
 	where
 	-- This gives me the width axis of my image
 	-- It is acheived by a cross product of my looking direction and a vertical axis
@@ -48,9 +48,13 @@ calculate_rays (Camera width height wres hres focus pos direction) = rays
 	-- This function takes in the point and returns the direction of the ray at that point
 	-- If it's perspective it involves subtracting from the focal point. If it's orthographic it's just always direction.
 	ray_direction = maybe (const direction) (\len -> (flip (-)) $ pos - (len |* direction)) focus
+
+-- This function, finally, generates an array of wres and hres full of the proper ray at each point
+calculate_rays camera = build_array (calculate_ray camera) (Point 1 1, Point wres hres)
+	where
+	(Camera _ _ wres hres _ _ _) = camera
 	-- This function takes a function expecting (x,y) and bounds and builds an array by calling the function at each point
 	build_array func bounds = listArray bounds $ map func $ range bounds
-	-- This function, finally, generates an array of wres and hres full of the proper ray at each point
-	rays = build_array ((\pos -> Ray (ray_direction pos) pos).ray_pos) (Point 1 1, Point wres hres)
 
-fire_rays rays mesh = fmap ((flip intersection) mesh) rays
+fire_ray mesh ray = intersection ray mesh
+fire_rays rays mesh = fmap (fire_ray mesh) rays

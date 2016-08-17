@@ -2,4 +2,6 @@
 *.hi
 intersection-test
 sdl_test
+image_render
 dist/
+test.png
