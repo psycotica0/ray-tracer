@@ -19,7 +19,8 @@ test_cube = cube (3 |> [2, 0, 0]) (3 |> [0, 2, 0]) (3 |> [0, 0, 2]) (3 |> [0, 0,
 renderPixel camera x y = computePixel $ fire_ray test_cube $ calculate_ray camera $ Point x y
   where
   computePixel Nothing = PixelRGB8 0 0 0
-  computePixel (Just _) = PixelRGB8 255 0 0
+  computePixel (Just v) = PixelRGB8 (compress v) 0 0
+  compress v = floor $ 256 - 127 * v
 
 main = do
   args <- getArgs
