@@ -2,3 +2,4 @@
 *.hi
 intersection-test
 sdl_test
+dist/
