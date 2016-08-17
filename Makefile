@@ -9,10 +9,10 @@ intersection-test: intersection-test.hs Raytracer/Camera.hs Raytracer/Geometry.h
 	ghc intersection-test.hs
 
 image_render: image_render.hs Raytracer/Camera.hs Raytracer/Geometry.hs
-	ghc image_render
+	ghc -threaded image_render
 
 test.png: image_render
-	./image_render 400 300 1 2 1 -1 -1 0 1
+	./image_render +RTS -N2 -RTS 400 300 1 2 1 -1 -1 0 1
 
 clean:
 	$(RM) *.o Raytracer/*.o *.hi Raytracer/*.hi intersection-test sdl_test

@@ -1,10 +1,12 @@
 module Main(main) where
 
 import System.Environment (getArgs)
-import Codec.Picture (generateImage, savePngImage, DynamicImage(ImageRGB8), PixelRGB8(PixelRGB8))
+import Codec.Picture (generateImage, savePngImage, DynamicImage(ImageRGB8), PixelRGB8(PixelRGB8), pixelAt)
 import Numeric.LinearAlgebra.Data ((|>))
 import Raytracer.Camera (Camera(Camera), Point(Point), fire_ray, calculate_ray)
 import Raytracer.Geometry (cube)
+
+import Control.Parallel.Strategies (($|), parTuple2, rdeepseq)
 
 help = putStrLn
   "Ray traces an image from a simple scene\n\
@@ -22,6 +24,14 @@ renderPixel camera x y = computePixel $ fire_ray test_cube $ calculate_ray camer
   computePixel (Just v) = PixelRGB8 (compress v) 0 0
   compress v = floor $ 256 - 127 * v
 
+-- Generates the image with 2 parallel processes
+parGenerateImage func w h = (combined $| strat) (evens, odds)
+  where
+  strat = (parTuple2 rdeepseq rdeepseq)
+  evens = generateImage (\x y -> func x $ y*2) w $ h `div` 2
+  odds = generateImage (\x y -> func x $ y*2 + 1) w $ h `div` 2
+  combined (e, o) = generateImage (\x y -> pixelAt (if even y then e else o) x $ y `div` 2) w h
+
 main = do
   args <- getArgs
   if length args /= 9 then
@@ -31,5 +41,5 @@ main = do
     let w' = (read width) `div` (read step)
     let h' = (read height) `div` (read step)
     let camera = test_camera w' h' (3 |> [read cx, read cy, read cz]) (3 |> [read dx, read dy, read dz])
-    let img = generateImage (renderPixel camera) w' h'
+    let img = parGenerateImage (renderPixel camera) w' h'
     savePngImage "test.png" $ ImageRGB8 img
