@@ -15,7 +15,7 @@ import Control.Applicative ((<*>))
 import Data.Maybe (fromJust, isJust)
 import Data.List (intersperse)
 
-import Data.Packed.Vector ((|>))
+import Numeric.LinearAlgebra.Data ((|>))
 
 import Raytracer.Geometry (cube)
 import Raytracer.Camera (Camera(Camera), calculate_rays, fire_rays)

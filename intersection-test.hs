@@ -1,5 +1,5 @@
 import Data.List (intercalate)
-import Data.Packed.Vector ((|>))
+import Numeric.LinearAlgebra.Data ((|>))
 import Data.Array (elems, bounds)
 import Raytracer.Geometry (cube)
 import Raytracer.Camera (Camera(Camera), Point(Point), calculate_rays, fire_rays)

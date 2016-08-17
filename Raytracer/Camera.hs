@@ -1,8 +1,8 @@
 module Raytracer.Camera where
 
-import Data.Packed.Vector (Vector, (|>), toList)
+import Numeric.LinearAlgebra.Data (Vector, (|>), toList)
 import Raytracer.Geometry (Ray(Ray), (|*), intersection)
-import Numeric.LinearAlgebra.Util (cross)
+import Numeric.LinearAlgebra (cross)
 import Data.Array (listArray)
 import Data.Monoid (mappend)
 import Data.Tuple (swap)

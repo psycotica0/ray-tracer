@@ -1,7 +1,7 @@
 module Raytracer.Geometry where
 
-import Data.Packed.Vector (Vector, (|>), toList, (@>))
-import Data.Packed.Matrix (fromColumns, asColumn, toColumns)
+import Numeric.LinearAlgebra.Data (Vector, (|>), toList, (!))
+import Numeric.LinearAlgebra.Data (fromColumns, asColumn, toColumns)
 import Data.Maybe.HT (toMaybe)
 import Data.Monoid (First(First), Monoid, getFirst, mempty, mappend, mconcat)
 import Numeric.LinearAlgebra (luSolve, luPacked, pinv, (<>))
@@ -34,7 +34,7 @@ calc_plane (Plane a b c) n1 n2 = (n1 |* a) + (n2 |* b) + c
 instance Intersectable Plane where
 	intersection ray plane = find (all_of [not.isInfinite, (>0)]) (Just n)
 		where
-		n = (ray_plane_intersect ray plane) @> 2
+		n = (ray_plane_intersect ray plane) ! 2
 
 -- Each of these Vectors represent a point in 3-space
 data Triangle = Triangle (Vector Double) (Vector Double) (Vector Double) deriving (Show)
