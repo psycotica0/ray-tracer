@@ -1,10 +1,11 @@
 module Main(main) where
 
 import System.Environment (getArgs)
-import Codec.Picture (generateImage, savePngImage, DynamicImage(ImageRGB8), PixelRGB8(PixelRGB8), pixelAt)
+import Codec.Picture (generateImage, savePngImage, DynamicImage(ImageRGB8), PixelRGB8(PixelRGB8), pixelAt, colorMap)
 import Numeric.LinearAlgebra.Data ((|>))
 import Raytracer.Camera (Camera(Camera), Point(Point), fire_ray, calculate_ray)
-import Raytracer.Geometry (cube)
+import Raytracer.Geometry (cube, square, dist, Collision(Collision))
+import Data.Monoid ((<>))
 
 import Control.Parallel.Strategies (rdeepseq, parMap)
 import Control.Concurrent (getNumCapabilities)
@@ -17,13 +18,15 @@ help = putStrLn
   \For example, w=200 h=200 step=1 will be a 200x200 image, 200x200x2 will be 100x100, but have the same frame"
 
 test_camera wres hres = Camera 4 3 wres hres (Just 1)
-test_cube = cube (3 |> [2, 0, 0]) (3 |> [0, 2, 0]) (3 |> [0, 0, 2]) (3 |> [0, 0, 0])
+test_cube = cube (PixelRGB8 255 0 255) (3 |> [2, 0, 0]) (3 |> [0, 2, 0]) (3 |> [0, 0, 2]) (3 |> [0, 0, 0])
+test_floor = square (PixelRGB8 255 255 0) (3 |> [8,0,0]) (3 |> [0,0,8]) (3 |> [-4,2,-4])
+test_mesh = test_cube <> test_floor
 
-renderPixel camera x y = computePixel $ fire_ray test_cube $ calculate_ray camera $ Point x y
+renderPixel camera x y = computePixel $ fire_ray test_mesh $ calculate_ray camera $ Point x y
   where
   computePixel Nothing = PixelRGB8 0 0 0
-  computePixel (Just v) = PixelRGB8 (compress v) 0 0
-  compress v = floor $ 256 - 127 * v
+  computePixel (Just (Collision d c)) = colorMap (compress d) c
+  compress d v = floor $ (fromIntegral v) * (1 - d)
 
 parGenerateImage 1 func w h = generateImage func w h
 parGenerateImage n func w h = generateImage combine w h
