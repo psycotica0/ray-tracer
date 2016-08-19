@@ -17,9 +17,9 @@ help = putStrLn
   \width and height the size of the image, and step is how many pixels exist between width and height\n\
   \For example, w=200 h=200 step=1 will be a 200x200 image, 200x200x2 will be 100x100, but have the same frame"
 
-test_camera wres hres = Camera 4 3 wres hres (Just 1)
+test_camera wres hres = Camera 4 3 wres hres (Just 3)
 test_cube = cube (PixelRGB8 255 0 255) (3 |> [2, 0, 0]) (3 |> [0, 2, 0]) (3 |> [0, 0, 2]) (3 |> [0, 0, 0])
-test_floor = square (PixelRGB8 255 255 0) (3 |> [8,0,0]) (3 |> [0,0,8]) (3 |> [-4,2,-4])
+test_floor = square (PixelRGB8 255 255 0) (3 |> [8,0,0]) (3 |> [0,0,8]) (3 |> [-2,0,-2])
 test_mesh = test_cube <> test_floor
 
 renderPixel camera x y = computePixel $ fire_ray test_mesh $ calculate_ray camera $ Point x y
@@ -27,6 +27,8 @@ renderPixel camera x y = computePixel $ fire_ray test_mesh $ calculate_ray camer
   computePixel Nothing = PixelRGB8 0 0 0
   computePixel (Just (Collision d c)) = colorMap (compress d) c
   compress d v = floor $ (fromIntegral v) * (1 - d)
+
+verticalFlip h func camera x y = func camera x (h - y)
 
 parGenerateImage 1 func w h = generateImage func w h
 parGenerateImage n func w h = generateImage combine w h
@@ -49,5 +51,5 @@ main = do
     let w' = (read width) `div` (read step)
     let h' = (read height) `div` (read step)
     let camera = test_camera w' h' (3 |> [read cx, read cy, read cz]) (3 |> [read dx, read dy, read dz])
-    let img = parGenerateImage numCores (renderPixel camera) w' h'
+    let img = parGenerateImage numCores (verticalFlip h' renderPixel camera) w' h'
     savePngImage "test.png" $ ImageRGB8 img
