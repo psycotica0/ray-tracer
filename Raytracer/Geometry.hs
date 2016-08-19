@@ -22,6 +22,10 @@ all_of conditions value = and $ conditions <*> (pure value)
 data Ray = Ray (Vector Double) (Vector Double) deriving (Show)
 calc_ray (Ray a b) n1 = (n1 |* a) + b
 
+-- This computes the ray that goes from the first point to the second
+rayTo :: (Vector Double) -> (Vector Double) -> Ray
+p1 `rayTo` p2 = Ray (p2 - p1) p1
+
 -- This wraps a collision with a ray and an object
 -- The `a` is what the object was holding, and the double is how far down the
 -- ray the collision occured (used to find the "first" collision)
