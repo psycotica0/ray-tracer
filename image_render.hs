@@ -25,12 +25,12 @@ test_floor = square (PixelRGB8 255 255 0) (3 |> [8,0,0]) (3 |> [0,0,8]) (3 |> [-
 test_mesh = test_cube <> test_floor
 
 test_lights = [
-  Light (3|> [-1, 3, 1]) $ PixelRGB8 255 255 255,
+  Light (3|> [-1, 3, 1]) $ PixelRGB8 127 127 127,
   Light (3|> [1, 3, 1]) $ PixelRGB8 0 255 255
   ]
 
 -- This mixes light colours additively
-mixColours = foldr (mixWith add) (PixelRGB8 80 80 80)
+mixColours = foldr (mixWith add) (PixelRGB8 20 20 20)
   where
   add _ c1 c2 = if maxBound - c1 >= c2 then c1 + c2 else maxBound
 
