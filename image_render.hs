@@ -1,7 +1,7 @@
 module Main(main) where
 
 import System.Environment (getArgs)
-import Codec.Picture (generateImage, savePngImage, DynamicImage(ImageRGB8), PixelRGB8(PixelRGB8), pixelAt, colorMap)
+import Codec.Picture (generateImage, savePngImage, DynamicImage(ImageRGB8), PixelRGB8(PixelRGB8), pixelAt, colorMap, mixWith)
 import Numeric.LinearAlgebra.Data ((|>))
 import Raytracer.Camera (Camera(Camera), Point(Point), fire_ray, calculate_ray)
 import Raytracer.Geometry (cube, square, dist, Collision(Collision), calc_ray)
@@ -26,18 +26,26 @@ test_mesh = test_cube <> test_floor
 
 test_lights = [
   Light (3|> [-1, 3, 1]) $ PixelRGB8 255 255 255,
-  Light (3|> [1, 3, 1]) $ PixelRGB8 0 0 255
+  Light (3|> [1, 3, 1]) $ PixelRGB8 0 255 255
   ]
 
-global_illuminate = colorMap (`div` 5)
+-- This mixes light colours additively
+mixColours = foldr (mixWith add) (PixelRGB8 80 80 80)
+  where
+  add _ c1 c2 = if maxBound - c1 >= c2 then c1 + c2 else maxBound
+
+-- This mixes a pigment with a light subtractively
+reflectLight :: PixelRGB8 -> PixelRGB8 -> PixelRGB8
+reflectLight surface light = mixWith subColour surface light
+  where
+  subColour _ cs cl = if cl >= (maxBound - cs) then cl - (maxBound - cs) else minBound
 
 renderPixel camera x y = computePixel $ fire_ray test_mesh ray
   where
   ray = calculate_ray camera $ Point x y
   lights = computeLighting test_mesh test_lights
   computePixel Nothing = PixelRGB8 0 0 0
-  computePixel (Just (Collision d c)) = if not $ null $ lights $ calc_ray ray d then c else global_illuminate c -- colorMap (compress d) c
-  compress d v = floor $ (fromIntegral v) * (1 - d)
+  computePixel (Just (Collision d c)) = reflectLight c $ mixColours $ lights $ calc_ray ray d
 
 verticalFlip h func camera x y = func camera x (h - y)
 
