@@ -18,12 +18,15 @@ import Data.Bool.HT (if')
 all_of :: [(a -> Bool)] -> a -> Bool
 all_of conditions value = and $ conditions <*> (pure value)
 
+type Pos = Vector Double
+type Dir = Vector Double
+
 -- This represents a ray of the form r = ax + b
-data Ray = Ray (Vector Double) (Vector Double) deriving (Show)
+data Ray = Ray Dir Pos deriving (Show)
 calc_ray (Ray a b) n1 = (n1 |* a) + b
 
 -- This computes the ray that goes from the first point to the second
-rayTo :: (Vector Double) -> (Vector Double) -> Ray
+rayTo :: Pos -> Pos -> Ray
 p1 `rayTo` p2 = Ray (p2 - p1) p1
 
 -- This wraps a collision with a ray and an object
@@ -46,7 +49,7 @@ ray_plane_intersect :: Ray -> Plane a -> (Vector Double)
 ray_plane_intersect (Ray r1 r2) (Plane a p1 p2 p3) = head.toColumns.(\m -> (luSolve.luPacked) m (asColumn (r2 - p3))) $ fromColumns [p1, p2, -1 |* r1]
 
 -- This represents a plane of the form p = ax + by + c
-data Plane a = Plane a (Vector Double) (Vector Double) (Vector Double) deriving (Show)
+data Plane a = Plane a Dir Dir Pos deriving (Show)
 calc_plane (Plane _ a b c) n1 n2 = (n1 |* a) + (n2 |* b) + c
 
 instance Intersectable Plane where
@@ -55,7 +58,7 @@ instance Intersectable Plane where
 		n = (ray_plane_intersect ray plane) ! 2
 
 -- Each of these Vectors represent a point in 3-space
-data Triangle a = Triangle a (Vector Double) (Vector Double) (Vector Double) deriving (Show)
+data Triangle a = Triangle a Pos Pos Pos deriving (Show)
 
 instance Intersectable Triangle where
 	intersection ray (Triangle a p1 p2 p3) = if' (not $ all_of [all (>0), (1>).sum] [n1,n2]) Nothing $ find (all_of [not.isInfinite, (>0)] . dist) $ Just $ Collision n a

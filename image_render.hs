@@ -4,7 +4,8 @@ import System.Environment (getArgs)
 import Codec.Picture (generateImage, savePngImage, DynamicImage(ImageRGB8), PixelRGB8(PixelRGB8), pixelAt, colorMap)
 import Numeric.LinearAlgebra.Data ((|>))
 import Raytracer.Camera (Camera(Camera), Point(Point), fire_ray, calculate_ray)
-import Raytracer.Geometry (cube, square, dist, Collision(Collision), calc_ray, rayTo)
+import Raytracer.Geometry (cube, square, dist, Collision(Collision), calc_ray)
+import Raytracer.Light (Light(Light), computeLighting)
 import Data.Monoid ((<>))
 import Data.Maybe (isJust)
 
@@ -23,17 +24,19 @@ test_cube = cube (PixelRGB8 255 0 255) (3 |> [2, 0, 0]) (3 |> [0, 2, 0]) (3 |> [
 test_floor = square (PixelRGB8 255 255 0) (3 |> [8,0,0]) (3 |> [0,0,8]) (3 |> [-2,0,-2])
 test_mesh = test_cube <> test_floor
 
-test_lights = [3|> [-1, 3, 1], 3|> [1, 3, 1]]
+test_lights = [
+  Light (3|> [-1, 3, 1]) $ PixelRGB8 255 255 255,
+  Light (3|> [1, 3, 1]) $ PixelRGB8 0 0 255
+  ]
 
 global_illuminate = colorMap (`div` 5)
 
 renderPixel camera x y = computePixel $ fire_ray test_mesh ray
   where
   ray = calculate_ray camera $ Point x y
-  light_rays point = fmap (point `rayTo`) test_lights
-  reachable_lights point = any (not . isJust) $ fmap (fire_ray test_mesh) $ light_rays point
+  lights = computeLighting test_mesh test_lights
   computePixel Nothing = PixelRGB8 0 0 0
-  computePixel (Just (Collision d c)) = if reachable_lights $ calc_ray ray d then c else global_illuminate c -- colorMap (compress d) c
+  computePixel (Just (Collision d c)) = if not $ null $ lights $ calc_ray ray d then c else global_illuminate c -- colorMap (compress d) c
   compress d v = floor $ (fromIntegral v) * (1 - d)
 
 verticalFlip h func camera x y = func camera x (h - y)
