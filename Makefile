@@ -8,7 +8,7 @@ sdl_test: sdl_test.hs Raytracer/Camera.hs Raytracer/Geometry.hs
 intersection-test: intersection-test.hs Raytracer/Camera.hs Raytracer/Geometry.hs
 	ghc intersection-test.hs
 
-image_render: image_render.hs Raytracer/Camera.hs Raytracer/Geometry.hs
+image_render: image_render.hs Raytracer/Camera.hs Raytracer/Geometry.hs Raytracer/Light.hs
 	ghc -threaded -O2 image_render
 
 #./image_render +RTS -N2 -RTS 400 300 1 2 1 -1 -1 0 1

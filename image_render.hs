@@ -25,7 +25,7 @@ test_floor = square (PixelRGB8 255 255 0) (3 |> [8,0,0]) (3 |> [0,0,8]) (3 |> [-
 test_mesh = test_cube <> test_floor
 
 test_lights = [
-  Light (3|> [-1, 3, 1]) $ PixelRGB8 127 127 127,
+  Light (3|> [-1, 3, 1]) $ PixelRGB8 255 255 255,
   Light (3|> [1, 3, 1]) $ PixelRGB8 0 255 255
   ]
 
