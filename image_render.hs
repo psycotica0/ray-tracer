@@ -21,12 +21,15 @@ help = putStrLn
 
 test_camera wres hres = Camera 4 3 wres hres (Just 3)
 test_cube = cube (PixelRGB8 255 0 255) (3 |> [2, 0, 0]) (3 |> [0, 2, 0]) (3 |> [0, 0, 2]) (3 |> [0, 0, 0])
-test_floor = square (PixelRGB8 255 255 0) (3 |> [8,0,0]) (3 |> [0,0,8]) (3 |> [-2,0,-2])
+test_floor = square (PixelRGB8 255 255 255) (3 |> [8,0,0]) (3 |> [0,0,8]) (3 |> [-2,0,-2])
 test_mesh = test_cube <> test_floor
 
 test_lights = [
-  Light (3|> [-1, 3, 1]) $ PixelRGB8 255 255 255,
-  Light (3|> [1, 3, 1]) $ PixelRGB8 0 255 255
+  Light (3|> [-1, 3, 1]) 6 $ PixelRGB8 255 255 255,
+  Light (3|> [1, 4, 1]) 5 $ PixelRGB8 0 0 255,
+  Light (3|> [6, 0, 0]) 2 $ PixelRGB8 255 0 0,
+  Light (3|> [6, 0, 2]) 2 $ PixelRGB8 0 255 0,
+  Light (3|> [6, 0, 4]) 2 $ PixelRGB8 0 0 255
   ]
 
 -- This mixes light colours additively
