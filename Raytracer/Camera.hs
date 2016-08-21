@@ -15,7 +15,7 @@ import Data.Function (on)
 -- The maybe is Focal Distance. If it's Nothing, then we do an orthographic representation
 --   If it's a number, then it's the number of units back that the focal point is.
 -- We assume for now that the camera is always level relative to (1, 0, 1) (No roll)
-data Camera = Camera Double Double Int Int (Maybe Double) (Vector Double) (Vector Double)
+data Camera = Camera Double Double Int Int (Maybe Double) (Vector Double) (Vector Double) deriving Show
 
 data Point = Point Int Int deriving (Eq, Show)
 

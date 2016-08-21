@@ -1,6 +1,6 @@
 module Raytracer.Geometry where
 
-import Numeric.LinearAlgebra.Data (Vector, (|>), toList, (!))
+import Numeric.LinearAlgebra.Data (Vector, (|>), toList, (!), fromList, toList)
 import Numeric.LinearAlgebra.Data (fromColumns, asColumn, toColumns)
 import Data.Maybe.HT (toMaybe)
 import Data.Monoid (First(First), Monoid, getFirst, mempty, mappend, mconcat)
@@ -23,7 +23,10 @@ type Dir = Vector Double
 
 -- This represents a ray of the form r = ax + b
 data Ray = Ray Dir Pos deriving (Show)
-calc_ray (Ray a b) n1 = (n1 |* a) + b
+calc_ray (Ray a b) n1 = round_to $ (n1 |* a) + b
+  where
+  round_to = fromList . map (epsilon_round 6) . toList
+  epsilon_round n f = (fromInteger $ round $ f * (10^n)) / (10.0^^n)
 
 -- This computes the ray that goes from the first point to the second
 rayTo :: Pos -> Pos -> Ray
